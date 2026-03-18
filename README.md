@@ -37,9 +37,7 @@ node dist/index.js --chat-files src/main.ts --mentioned-idents "RepoMap"
 
 ### MCP server mode
 
-```bash
-node dist/index.js --serve
-```
+When stdin is piped (launched by an MCP client), the server automatically enters MCP mode — no flag needed. You can also force it with `--serve`.
 
 Configure in your MCP client (Claude Desktop, Cursor, etc.):
 
@@ -48,7 +46,7 @@ Configure in your MCP client (Claude Desktop, Cursor, etc.):
   "mcpServers": {
     "repomap": {
       "command": "node",
-      "args": ["/absolute/path/to/repomap-mcp/dist/index.js", "--serve"]
+      "args": ["/absolute/path/to/repomap-mcp/dist/index.js"]
     }
   }
 }
@@ -60,6 +58,22 @@ Configure in your MCP client (Claude Desktop, Cursor, etc.):
 |------|-------------|
 | `repo_map` | Generate a ranked repository map within a token budget |
 | `search_identifiers` | Search for code identifiers (functions, classes, variables) with context |
+
+## Debugging with MCP Inspector
+
+[MCP Inspector](https://github.com/modelcontextprotocol/inspector) provides a web UI for interactively testing and debugging MCP tools, resources, and notifications.
+
+```bash
+pnpm inspect
+```
+
+The Inspector UI opens at `http://localhost:6274`. From there you can:
+
+- Browse registered tools (`repo_map`, `search_identifiers`) and their schemas
+- Execute tools with custom inputs and view JSON responses
+- Monitor server logs and notifications in real time
+
+Server configuration is stored in `mcp.json` at the project root. No build step is needed — it runs TypeScript source directly via tsx.
 
 ## CLI options
 
