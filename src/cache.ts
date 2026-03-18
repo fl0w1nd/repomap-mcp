@@ -7,6 +7,7 @@ import {
   rmSync,
 } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { createHash } from "node:crypto";
 
 const CACHE_VERSION = 1;
@@ -17,11 +18,23 @@ interface CacheEntry<T> {
   data: T;
 }
 
+function getSystemCacheDir(): string {
+  const platform = os.platform();
+  if (platform === "darwin") {
+    return path.join(os.homedir(), "Library", "Caches", "repomap-mcp");
+  }
+  if (platform === "win32") {
+    return path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData", "Local"), "repomap-mcp", "cache");
+  }
+  return path.join(process.env.XDG_CACHE_HOME ?? path.join(os.homedir(), ".cache"), "repomap-mcp");
+}
+
 export class TagsCache {
   private cacheDir: string;
 
   constructor(root: string) {
-    this.cacheDir = path.join(root, ".cache", "repomap");
+    const rootHash = createHash("md5").update(path.resolve(root)).digest("hex").slice(0, 12);
+    this.cacheDir = path.join(getSystemCacheDir(), rootHash);
     mkdirSync(this.cacheDir, { recursive: true });
   }
 
