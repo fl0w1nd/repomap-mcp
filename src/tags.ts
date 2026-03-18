@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { Parser, Language, Query } from "web-tree-sitter";
 import type { Tag } from "./utils.js";
@@ -7,6 +8,17 @@ import { filenameToLang, type SupportedLanguage } from "./languages.js";
 import { TagsCache } from "./cache.js";
 
 const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const QUERIES_DIR = path.resolve(__dirname, "..", "queries");
+const LANGUAGE_PACK_DIR = path.join(QUERIES_DIR, "tree-sitter-language-pack");
+const LANGUAGES_DIR = path.join(QUERIES_DIR, "tree-sitter-languages");
+
+const QUERY_NAME_ALIASES: Partial<Record<SupportedLanguage, string[]>> = {
+  c_sharp: ["csharp", "c_sharp"],
+  tsx: ["typescript"],
+};
 
 let parserInitialized = false;
 
@@ -35,12 +47,18 @@ async function loadLanguage(lang: SupportedLanguage): Promise<Language> {
 }
 
 function getQueryPath(lang: SupportedLanguage): string | null {
-  const queriesDir = path.resolve(
-    path.dirname(require.resolve("repomap-mcp/package.json").replace(/\/dist\//, "/")),
-    "queries",
-  );
-  const primary = path.join(queriesDir, `${lang}-tags.scm`);
-  if (existsSync(primary)) return primary;
+  const names = QUERY_NAME_ALIASES[lang] ?? [lang];
+
+  for (const name of names) {
+    const packPath = path.join(LANGUAGE_PACK_DIR, `${name}-tags.scm`);
+    if (existsSync(packPath)) return packPath;
+  }
+
+  for (const name of names) {
+    const langPath = path.join(LANGUAGES_DIR, `${name}-tags.scm`);
+    if (existsSync(langPath)) return langPath;
+  }
+
   return null;
 }
 
@@ -99,9 +117,9 @@ export async function getTagsRaw(
     const captureName = capture.name;
     let kind: "def" | "ref" | null = null;
 
-    if (captureName.includes("definition")) {
+    if (captureName.startsWith("name.definition")) {
       kind = "def";
-    } else if (captureName.includes("reference")) {
+    } else if (captureName.startsWith("name.reference")) {
       kind = "ref";
     }
 
@@ -120,7 +138,13 @@ export async function getTagsRaw(
   parser.delete();
   tree.delete();
 
-  return tags;
+  const seen = new Set<string>();
+  return tags.filter((tag) => {
+    const key = `${tag.relFname}:${tag.line}:${tag.name}:${tag.kind}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function getTags(
