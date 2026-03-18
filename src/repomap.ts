@@ -183,6 +183,17 @@ export class RepoMap {
       personalization.set(relFname, 100.0);
     }
 
+    if (focusRelFiles.size > 0) {
+      for (const edge of edges) {
+        if (focusRelFiles.has(edge.to) && !focusRelFiles.has(edge.from)) {
+          personalization.set(edge.from, (personalization.get(edge.from) ?? 0) + 10.0);
+        }
+        if (focusRelFiles.has(edge.from) && !focusRelFiles.has(edge.to)) {
+          personalization.set(edge.to, (personalization.get(edge.to) ?? 0) + 10.0);
+        }
+      }
+    }
+
     const ranks = pagerank(nodes, edges, personalization.size > 0 ? personalization : undefined);
 
     const priorityRelFiles = new Set(
