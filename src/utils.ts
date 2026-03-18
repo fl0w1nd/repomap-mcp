@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 export interface Tag {
   relFname: string;
   fname: string;
@@ -45,6 +43,3 @@ export interface SearchResult {
   context: string;
 }
 
-export function readText(filePath: string): string {
-  return readFileSync(filePath, "utf-8");
-}
