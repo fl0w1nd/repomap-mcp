@@ -13,67 +13,77 @@ export function createServer(): McpServer {
     {
       title: "Generate Repo Map",
       description:
-        "Generate a repository map showing the most important code definitions, " +
-        "ranked by PageRank analysis of cross-file references. " +
-        "Useful for understanding codebase structure.",
+        "Generate a ranked repository map of code definitions " +
+        "via PageRank over cross-file reference graphs. " +
+        "Useful for understanding codebase structure, discovering entry points, " +
+        "or finding code related to specific files or identifiers.",
       inputSchema: {
         projectRoot: z.string().describe("Absolute path to the repository root"),
-        chatFiles: z
+        focusFiles: z
           .array(z.string())
           .optional()
-          .describe("Files currently in the chat context (highest priority)"),
-        otherFiles: z
+          .describe(
+            "Already-known files used as ranking anchor (x20 boost). " +
+            "Related code ranks higher; these files are excluded from output.",
+          ),
+        additionalFiles: z
           .array(z.string())
           .optional()
-          .describe("Other relevant files to consider"),
+          .describe("Extra file paths to include in analysis beyond auto-discovered ones."),
         tokenLimit: z
           .number()
           .optional()
           .default(8192)
-          .describe("Maximum number of tokens for the output map"),
+          .describe("Maximum token count for the output map"),
         excludeUnranked: z
           .boolean()
           .optional()
           .default(false)
-          .describe("Exclude files with zero PageRank"),
+          .describe("Exclude files with zero PageRank from output"),
         forceRefresh: z
           .boolean()
           .optional()
           .default(false)
-          .describe("Force refresh of cached tags"),
-        mentionedFiles: z
+          .describe("Bypass tag cache and re-parse all files"),
+        priorityFiles: z
           .array(z.string())
           .optional()
-          .describe("Files explicitly mentioned (get a ranking boost)"),
-        mentionedIdents: z
+          .describe(
+            "Important files that receive a ranking boost (x5). " +
+            "Still included in output, unlike focusFiles.",
+          ),
+        priorityIdentifiers: z
           .array(z.string())
           .optional()
-          .describe("Identifiers explicitly mentioned (get a ranking boost)"),
+          .describe(
+            "Identifier names to boost in ranking (x10). " +
+            "Matches definitions across all files.",
+          ),
         verbose: z.boolean().optional().default(false),
       },
     },
     async ({
       projectRoot,
-      chatFiles,
-      otherFiles,
+      focusFiles,
+      additionalFiles,
       tokenLimit,
       excludeUnranked,
       forceRefresh,
-      mentionedFiles,
-      mentionedIdents,
+      priorityFiles,
+      priorityIdentifiers,
       verbose,
     }) => {
       try {
         const repoMap = new RepoMap(projectRoot, { verbose });
         const result = await repoMap.getRepoMap({
           root: projectRoot,
-          chatFiles,
-          otherFiles,
+          focusFiles,
+          additionalFiles,
           mapTokens: tokenLimit,
           excludeUnranked,
           forceRefresh,
-          mentionedFiles,
-          mentionedIdents,
+          priorityFiles,
+          priorityIdentifiers,
         });
 
         return {
@@ -103,11 +113,11 @@ export function createServer(): McpServer {
     {
       title: "Search Identifiers",
       description:
-        "Search for code identifiers (functions, classes, variables) across the repository. " +
-        "Returns matching definitions and references with code context.",
+        "Search for code identifiers (functions, classes, variables) across the repository " +
+        "via Tree-sitter AST analysis. Returns matching definitions and references with code context.",
       inputSchema: {
         projectRoot: z.string().describe("Absolute path to the repository root"),
-        query: z.string().describe("Identifier name to search for"),
+        query: z.string().describe("Identifier name to search for (case-insensitive substring match)"),
         maxResults: z
           .number()
           .optional()
@@ -117,12 +127,12 @@ export function createServer(): McpServer {
           .boolean()
           .optional()
           .default(true)
-          .describe("Include definitions in results"),
+          .describe("Include definition sites"),
         includeReferences: z
           .boolean()
           .optional()
           .default(true)
-          .describe("Include references in results"),
+          .describe("Include reference sites"),
       },
     },
     async ({ projectRoot, query, maxResults, includeDefinitions, includeReferences }) => {

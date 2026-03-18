@@ -14,10 +14,10 @@ export interface RankedTag {
 export interface RepoMapOptions {
   root: string;
   mapTokens?: number;
-  chatFiles?: string[];
-  otherFiles?: string[];
-  mentionedFiles?: string[];
-  mentionedIdents?: string[];
+  focusFiles?: string[];
+  additionalFiles?: string[];
+  priorityFiles?: string[];
+  priorityIdentifiers?: string[];
   model?: string;
   maxContextWindow?: number;
   forceRefresh?: boolean;

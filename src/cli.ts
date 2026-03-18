@@ -5,10 +5,10 @@ interface CliArgs {
   paths: string[];
   root: string;
   mapTokens: number;
-  chatFiles: string[];
-  otherFiles: string[];
-  mentionedFiles: string[];
-  mentionedIdents: string[];
+  focusFiles: string[];
+  additionalFiles: string[];
+  priorityFiles: string[];
+  priorityIdents: string[];
   verbose: boolean;
   forceRefresh: boolean;
   excludeUnranked: boolean;
@@ -20,10 +20,10 @@ export function parseArgs(argv: string[]): CliArgs {
     paths: [],
     root: ".",
     mapTokens: 8192,
-    chatFiles: [],
-    otherFiles: [],
-    mentionedFiles: [],
-    mentionedIdents: [],
+    focusFiles: [],
+    additionalFiles: [],
+    priorityFiles: [],
+    priorityIdents: [],
     verbose: false,
     forceRefresh: false,
     excludeUnranked: false,
@@ -41,24 +41,24 @@ export function parseArgs(argv: string[]): CliArgs {
       case "--map-tokens":
         args.mapTokens = parseInt(argv[++i] ?? "8192", 10);
         break;
-      case "--chat-files":
+      case "--focus-files":
         while (i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
-          args.chatFiles.push(argv[++i]);
+          args.focusFiles.push(argv[++i]);
         }
         break;
-      case "--other-files":
+      case "--additional-files":
         while (i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
-          args.otherFiles.push(argv[++i]);
+          args.additionalFiles.push(argv[++i]);
         }
         break;
-      case "--mentioned-files":
+      case "--priority-files":
         while (i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
-          args.mentionedFiles.push(argv[++i]);
+          args.priorityFiles.push(argv[++i]);
         }
         break;
-      case "--mentioned-idents":
+      case "--priority-idents":
         while (i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
-          args.mentionedIdents.push(argv[++i]);
+          args.priorityIdents.push(argv[++i]);
         }
         break;
       case "--verbose":
@@ -96,14 +96,14 @@ export async function runCli(argv: string[]): Promise<void> {
     verbose: args.verbose,
   });
 
-  const otherFiles = args.otherFiles.length > 0 ? args.otherFiles : args.paths;
+  const additionalFiles = args.additionalFiles.length > 0 ? args.additionalFiles : args.paths;
 
   const result = await repoMap.getRepoMap({
     root,
-    chatFiles: args.chatFiles,
-    otherFiles,
-    mentionedFiles: args.mentionedFiles,
-    mentionedIdents: args.mentionedIdents,
+    focusFiles: args.focusFiles,
+    additionalFiles,
+    priorityFiles: args.priorityFiles,
+    priorityIdentifiers: args.priorityIdents,
     forceRefresh: args.forceRefresh,
     excludeUnranked: args.excludeUnranked,
     mapTokens: args.mapTokens,

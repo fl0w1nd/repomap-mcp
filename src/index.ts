@@ -64,18 +64,18 @@ Usage:
   repomap-mcp                         Auto-detect: MCP if stdin is piped, help if TTY
 
 Options:
-  --root <dir>              Repository root directory (default: ".")
-  --map-tokens <n>          Maximum tokens for the map (default: 8192)
-  --chat-files <files...>   Files in current chat context (highest priority)
-  --other-files <files...>  Other relevant files
-  --mentioned-files <f...>  Explicitly mentioned files (ranking boost)
-  --mentioned-idents <i...> Explicitly mentioned identifiers (ranking boost)
-  --verbose                 Enable verbose output
-  --force-refresh           Force refresh of cached tags
-  --exclude-unranked        Exclude files with zero PageRank
-  --serve                   Force MCP stdio server mode
-  --help, -h                Show this help message
-  --version, -v             Show version number
+  --root <dir>                Repository root directory (default: ".")
+  --map-tokens <n>            Maximum tokens for the map (default: 8192)
+  --focus-files <files...>    Files already known; used as ranking anchor, excluded from output
+  --additional-files <f...>   Extra files to include in analysis
+  --priority-files <f...>     Important files to boost in ranking (x5)
+  --priority-idents <i...>    Important identifiers to boost in ranking (x10)
+  --verbose                   Enable verbose output
+  --force-refresh             Force refresh of cached tags
+  --exclude-unranked          Exclude files with zero PageRank
+  --serve                     Force MCP stdio server mode
+  --help, -h                  Show this help message
+  --version, -v               Show version number
 `);
 }
 

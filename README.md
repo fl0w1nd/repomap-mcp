@@ -9,7 +9,7 @@ Inspired by [aider](https://github.com/Aider-AI/aider)'s repo map feature, reimp
 1. **File discovery** — recursively scans the repository, respecting `.gitignore` rules
 2. **AST parsing** — uses Tree-sitter (WASM) with SCM queries from Aider to extract definitions and references across 40+ languages
 3. **Graph construction** — builds a cross-file reference graph (file A references identifier defined in file B → edge A→B)
-4. **PageRank** — ranks files by importance using personalized PageRank, with configurable boost for chat/mentioned files
+4. **PageRank** — ranks files by importance using personalized PageRank, with configurable boost for focus/priority files
 5. **Token budgeting** — binary-searches over ranked tags to fit the most relevant definitions within a token limit
 6. **Context rendering** — renders code snippets with structural context (parent scopes, elided sections)
 
@@ -31,8 +31,8 @@ node dist/index.js
 # With options
 node dist/index.js --root /path/to/repo --map-tokens 4096 --verbose
 
-# Prioritize specific files
-node dist/index.js --chat-files src/main.ts --mentioned-idents "RepoMap"
+# Focus on specific files and boost an identifier
+node dist/index.js --focus-files src/main.ts --priority-idents "RepoMap"
 ```
 
 ### MCP server mode
@@ -81,14 +81,14 @@ Server configuration is stored in `mcp.json` at the project root. No build step 
 |--------|---------|-------------|
 | `--root <dir>` | `.` | Repository root directory |
 | `--map-tokens <n>` | `8192` | Maximum tokens for the output |
-| `--chat-files <files...>` | — | Files in current chat context (×20 boost) |
-| `--other-files <files...>` | — | Other relevant files to include |
-| `--mentioned-files <files...>` | — | Mentioned files (×5 boost) |
-| `--mentioned-idents <idents...>` | — | Mentioned identifiers (×10 boost) |
+| `--focus-files <files...>` | — | Files already known; ranking anchor, excluded from output (×20 boost) |
+| `--additional-files <files...>` | — | Extra files to include in analysis |
+| `--priority-files <files...>` | — | Important files to boost in ranking (×5) |
+| `--priority-idents <idents...>` | — | Important identifiers to boost in ranking (×10) |
 | `--verbose` | `false` | Show report on stderr |
 | `--force-refresh` | `false` | Bypass tag cache |
 | `--exclude-unranked` | `false` | Hide files with zero PageRank |
-| `--serve` | — | Start as MCP stdio server |
+| `--serve` | — | Force MCP stdio server mode |
 
 ## Supported languages
 

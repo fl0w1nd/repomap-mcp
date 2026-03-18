@@ -33,16 +33,16 @@ export class RepoMap {
   async getRepoMap(options: Partial<RepoMapOptions> = {}): Promise<RepoMapResult> {
     await initParser();
 
-    const chatFiles = (options.chatFiles ?? []).map((f) => path.resolve(this.root, f));
-    const otherFiles = (options.otherFiles ?? []).map((f) => path.resolve(this.root, f));
-    const mentionedFiles = new Set((options.mentionedFiles ?? []).map((f) => path.resolve(this.root, f)));
-    const mentionedIdents = new Set(options.mentionedIdents ?? []);
+    const focusFiles = (options.focusFiles ?? []).map((f) => path.resolve(this.root, f));
+    const additionalFiles = (options.additionalFiles ?? []).map((f) => path.resolve(this.root, f));
+    const priorityFiles = new Set((options.priorityFiles ?? []).map((f) => path.resolve(this.root, f)));
+    const priorityIdentifiers = new Set(options.priorityIdentifiers ?? []);
     const forceRefresh = options.forceRefresh ?? false;
     const excludeUnranked = options.excludeUnranked ?? false;
     const maxTokens = options.mapTokens ?? this.mapTokens;
 
     const allSrcFiles = findSrcFiles(this.root).filter(isSupportedFile);
-    const fileSet = new Set([...chatFiles, ...otherFiles, ...allSrcFiles]);
+    const fileSet = new Set([...focusFiles, ...additionalFiles, ...allSrcFiles]);
     const allFiles = Array.from(fileSet);
 
     const report = {
@@ -67,9 +67,9 @@ export class RepoMap {
     const rankedTags = this.getRankedTags(
       allTags,
       allFiles,
-      chatFiles,
-      mentionedFiles,
-      mentionedIdents,
+      focusFiles,
+      priorityFiles,
+      priorityIdentifiers,
     );
 
     if (excludeUnranked) {
@@ -78,7 +78,7 @@ export class RepoMap {
       rankedTags.push(...filtered);
     }
 
-    const map = this.buildMap(rankedTags, chatFiles, maxTokens);
+    const map = this.buildMap(rankedTags, focusFiles, maxTokens);
     return { map, report };
   }
 
@@ -144,9 +144,9 @@ export class RepoMap {
   private getRankedTags(
     allTags: Tag[],
     allFiles: string[],
-    chatFiles: string[],
-    mentionedFiles: Set<string>,
-    mentionedIdents: Set<string>,
+    focusFiles: string[],
+    priorityFiles: Set<string>,
+    priorityIdentifiers: Set<string>,
   ): RankedTag[] {
     const defines = new Map<string, Set<string>>();
     const references = new Map<string, Set<string>>();
@@ -178,15 +178,15 @@ export class RepoMap {
     }
 
     const personalization = new Map<string, number>();
-    const chatRelFiles = new Set(chatFiles.map((f) => path.relative(this.root, f)));
-    for (const relFname of chatRelFiles) {
+    const focusRelFiles = new Set(focusFiles.map((f) => path.relative(this.root, f)));
+    for (const relFname of focusRelFiles) {
       personalization.set(relFname, 100.0);
     }
 
     const ranks = pagerank(nodes, edges, personalization.size > 0 ? personalization : undefined);
 
-    const mentionedRelFiles = new Set(
-      Array.from(mentionedFiles).map((f) => path.relative(this.root, f)),
+    const priorityRelFiles = new Set(
+      Array.from(priorityFiles).map((f) => path.relative(this.root, f)),
     );
 
     const rankedTags: RankedTag[] = [];
@@ -195,9 +195,9 @@ export class RepoMap {
 
       const fileRank = ranks.get(tag.relFname) ?? 0;
       let boost = 1.0;
-      if (chatRelFiles.has(tag.relFname)) boost *= 20.0;
-      if (mentionedIdents.has(tag.name)) boost *= 10.0;
-      if (mentionedRelFiles.has(tag.relFname)) boost *= 5.0;
+      if (focusRelFiles.has(tag.relFname)) boost *= 20.0;
+      if (priorityIdentifiers.has(tag.name)) boost *= 10.0;
+      if (priorityRelFiles.has(tag.relFname)) boost *= 5.0;
 
       rankedTags.push({ rank: fileRank * boost, tag });
     }
@@ -208,10 +208,10 @@ export class RepoMap {
 
   private buildMap(
     rankedTags: RankedTag[],
-    chatFiles: string[],
+    focusFiles: string[],
     maxTokens: number,
   ): string {
-    const chatRelFiles = new Set(chatFiles.map((f) => path.relative(this.root, f)));
+    const focusRelFiles = new Set(focusFiles.map((f) => path.relative(this.root, f)));
 
     let left = 0;
     let right = rankedTags.length;
@@ -220,7 +220,7 @@ export class RepoMap {
     while (left <= right) {
       const mid = Math.floor((left + right) / 2);
       const subset = rankedTags.slice(0, mid);
-      const output = this.renderTags(subset, chatRelFiles);
+      const output = this.renderTags(subset, focusRelFiles);
       const tokens = countTokens(output);
 
       if (tokens <= maxTokens) {
@@ -234,7 +234,7 @@ export class RepoMap {
     return bestOutput;
   }
 
-  private renderTags(tags: RankedTag[], chatRelFiles: Set<string>): string {
+  private renderTags(tags: RankedTag[], focusRelFiles: Set<string>): string {
     const byFile = new Map<string, RankedTag[]>();
     for (const rt of tags) {
       const existing = byFile.get(rt.tag.relFname) ?? [];
@@ -250,7 +250,7 @@ export class RepoMap {
 
     const parts: string[] = [];
     for (const [relFname, fileTags] of sortedFiles) {
-      if (chatRelFiles.has(relFname)) continue;
+      if (focusRelFiles.has(relFname)) continue;
 
       const maxRank = Math.max(...fileTags.map((rt) => rt.rank));
       const lois = fileTags.map((rt) => rt.tag.line);
