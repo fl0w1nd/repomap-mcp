@@ -8,10 +8,11 @@
     "repomap-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector --config mcp.json"
+    "inspect": "npx @modelcontextprotocol/inspector --config mcp.json",
+    "prepublishOnly": "pnpm build"
   },
   "files": [
     "dist",
@@ -28,6 +29,14 @@
     "repository-map"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fl0w1nd/repomap-mcp.git"
+  },
+  "homepage": "https://github.com/fl0w1nd/repomap-mcp",
+  "bugs": {
+    "url": "https://github.com/fl0w1nd/repomap-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "gpt-tokenizer": "^3.4.0",
