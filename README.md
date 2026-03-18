@@ -1,8 +1,14 @@
 # repomap-mcp
 
-[![npm version](https://img.shields.io/npm/v/repomap-mcp.svg)](https://www.npmjs.com/package/repomap-mcp)
-[![license](https://img.shields.io/npm/l/repomap-mcp.svg)](https://github.com/fl0w1nd/repomap-mcp/blob/main/LICENSE)
-[![node](https://img.shields.io/node/v/repomap-mcp.svg)](https://nodejs.org)
+<p align="center">
+  <img src="public/cover.jpg" alt="repomap-mcp" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/repomap-mcp"><img src="https://img.shields.io/npm/v/repomap-mcp.svg" alt="npm version" /></a>
+  <a href="https://github.com/fl0w1nd/repomap-mcp/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/repomap-mcp.svg" alt="license" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/repomap-mcp.svg" alt="node" /></a>
+</p>
 
 > **[中文文档](./README.zh-CN.md)**
 
